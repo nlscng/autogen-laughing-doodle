@@ -1,0 +1,10 @@
+[project]
+name = "autogen-laughing-doodle"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "autogen>=0.9.3",
+    "autogen-ext>=0.6.1",
+]
