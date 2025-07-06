@@ -14,23 +14,21 @@ dotenv.load_dotenv()
 my_current_api_key = os.getenv("OPENAI_API_KEY")
 print(f"Using OpenAI API key: {my_current_api_key}")
 
-
-async def main():
+async def team_config(topic):
     model = OpenAIChatCompletionClient(model="gpt-4o", api_key=my_current_api_key)
 
-    topic = "The use of hairgels in modern society"
     host = AssistantAgent(
         name="Jane",
         system_message=(
-            f"You are a host for a debate about the topic: {topic}, with"
-            " a supporter agent named John and a critic agent named Jack. "
-            "You will start the debate, introduce the participants, and moderate the debate. "
-            "Give each debater 3 rounds to present their arguments, "
+            f"You are Jane, the host for a debate about the topic: {topic}. "
+            "You will moderate the debate between two participants: "
+            "a supporter agent John and a critic agent Jack. "
+            "You will start the debate for the two participants, annouse yourself as the host, introduce the participants, and moderate the debate. "
+            "A round is defined as both supporter and critic agent having a turn to speak."
             "At the begining of each round, announce the round number. "
-            "And at the begining of the last round, announce that it is the last round."
-            "After each of the debaters has 3 rounds, summarize the key points made by each participant. "
+            "And at the begining of the third round, announce that it is the last round."
+            "After the last round is complete, thank the audience, summarize the key points made by each participant. "
             "say exactly 'TERMINATE' to end the debate. "
-            "And remember to thank the audience for their participation before you say 'TERMINATE'."
         ),
         model_client=model,
     )
@@ -54,13 +52,16 @@ async def main():
     )
 
     team = RoundRobinGroupChat(
-        participants=[host, supporter, critic],
-        max_turns=8,
+        participants=[host, critic, supporter],
+        max_turns=10,
         termination_condition=TextMentionTermination(
             text="TERMINATE",
         ),
     )
+    return team
+    
 
+async def debate(team):
     # Start the debate
     res = await team.run(task="Start the debate!")
 
@@ -71,17 +72,24 @@ async def main():
 
     ## The asynchronous way to get the messages
     async for one_msg in team.run_stream(task="Start the debate!"):
-        print("-" * 40)
         if isinstance(one_msg, TaskResult):
-            print(f"Stopping reason: {one_msg.stop_reason}")
+            one_msg = f"Stopping reason: {one_msg.stop_reason}"
+            yield one_msg
         else:
-            print(f"{one_msg.source}: {one_msg.content}")
+            one_msg = f"{one_msg.source}: {one_msg.content}"
+            yield one_msg
 
     # res = await model.create(
     #     messages=[UserMessage(content="Hello, how are you?", source="user")]
     # )
     # print(res)
 
+async def main():
+    topic = "Climate Change"
+    team = await team_config(topic)
+    async for one_msg in debate(team):
+        print('-' * 40)
+        print(one_msg)
 
 if __name__ == "__main__":
     asyncio.run(main())
