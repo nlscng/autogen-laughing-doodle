@@ -20,11 +20,11 @@ async def team_config(topic):
     host = AssistantAgent(
         name="Jane",
         system_message=(
-            f"You are Jane, the host for a debate about the topic: {topic}. "
-            "You will moderate the debate between two participants: "
+            f"Your name is Jane, the host for a debate about the topic: {topic}. "
+            "You will kick off and moderate the debate between two participants: "
             "a supporter agent John and a critic agent Jack. "
             "You will start the debate for the two participants, annouse yourself as the host, introduce the participants, and moderate the debate. "
-            "A round is defined as both supporter and critic agent having a turn to speak."
+            "A round is defined as both John and Jack having a turn to speak."
             "At the begining of each round, announce the round number. "
             "And at the begining of the third round, announce that it is the last round."
             "After the last round is complete, thank the audience, summarize the key points made by each participant. "
@@ -53,7 +53,7 @@ async def team_config(topic):
 
     team = RoundRobinGroupChat(
         participants=[host, critic, supporter],
-        max_turns=10,
+        max_turns=20,
         termination_condition=TextMentionTermination(
             text="TERMINATE",
         ),
